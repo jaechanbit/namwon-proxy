@@ -1,23 +1,32 @@
 /* 스타일 시트 (style.css) */
 
 /* A4 비율 및 문서 기본 스타일 */
-#a4Document {
-  box-sizing: border-box;
-  background-color: #ffffff;
-  color: #111827;
-  user-select: none;
-  position: relative;
-  transition: transform 0.2s ease;
-}
-
-/* 모바일 화면에서 A4 미리보기가 삐져나가지 않도록 스케일링 래퍼 */
 #a4ScaleWrapper {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   position: relative;
   overflow: hidden;
+}
+
+#a4ScaleBox {
+  position: relative;
+  margin: 0 auto;
+  transition: width 0.12s ease-out, height 0.12s ease-out;
+}
+
+#a4Document {
+  box-sizing: border-box;
+  background-color: #ffffff;
+  color: #111827;
+  user-select: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: transform 0.12s ease-out;
 }
 
 /* 인쇄 스타일 (@media print) */

@@ -340,7 +340,10 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileViewToggle.querySelector('i').setAttribute('data-lucide', 'edit-3');
         lucide.createIcons();
       }
-      setTimeout(updateA4Scale, 50);
+      // 토글 즉시 및 렌더링 후 화면 맞춤 3중 보정
+      updateA4Scale();
+      requestAnimationFrame(updateA4Scale);
+      setTimeout(updateA4Scale, 60);
     } else {
       formSection.classList.remove('hidden');
       previewSection.classList.add('hidden');
@@ -352,8 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- 모바일 화면 크기에 맞춘 A4 실시간 자동 스케일링 (잘림 방지) ---
+  // --- 모바일 화면 크기에 맞춘 A4 실시간 자동 스케일링 (완전 잘림 방지 박스 모델) ---
   const a4ScaleWrapper = document.getElementById('a4ScaleWrapper');
+  const a4ScaleBox = document.getElementById('a4ScaleBox');
   const previewScaleText = document.getElementById('previewScaleText');
 
   function updateA4Scale() {
@@ -362,23 +366,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // 모바일 탭 등으로 previewSection이 숨겨져 있을 때는 스킵
     if (previewSection.classList.contains('hidden')) return;
 
-    const containerWidth = a4ScaleWrapper.clientWidth;
-    const padding = 16; // 좌우 안전 여백
-    const availableWidth = Math.max(containerWidth - padding, 240);
     const baseWidth = 595;
     const baseHeight = 842;
 
-    if (availableWidth < baseWidth) {
-      const scale = availableWidth / baseWidth;
+    // 스마트폰 뷰포트 실제 가로폭 계산
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const wrapperWidth = a4ScaleWrapper.clientWidth > 0 ? a4ScaleWrapper.clientWidth : viewportWidth;
+    const availableWidth = Math.min(viewportWidth - 24, wrapperWidth - 12);
+
+    if (availableWidth < baseWidth && availableWidth > 50) {
+      const scale = Math.max(availableWidth / baseWidth, 0.4);
+      const scaledW = Math.round(baseWidth * scale);
+      const scaledH = Math.round(baseHeight * scale);
+
+      // 점유 박스 크기를 축소된 크기로 딱 맞춤 (중앙 정렬 유지 & 좌우 잘림 0%)
+      if (a4ScaleBox) {
+        a4ScaleBox.style.width = `${scaledW}px`;
+        a4ScaleBox.style.height = `${scaledH}px`;
+      }
+      a4ScaleWrapper.style.height = `${scaledH + 16}px`;
+
+      // 문서는 좌상단(0, 0) 기준으로 정확히 축소
       a4Document.style.transform = `scale(${scale})`;
-      a4Document.style.transformOrigin = 'top center';
-      a4ScaleWrapper.style.height = `${Math.ceil(baseHeight * scale) + 16}px`;
+      a4Document.style.transformOrigin = '0 0';
+      a4Document.style.left = '0';
+      a4Document.style.top = '0';
+
       if (previewScaleText) {
         previewScaleText.textContent = `배율: ${Math.round(scale * 100)}% (화면맞춤)`;
       }
     } else {
-      a4Document.style.transform = 'none';
+      if (a4ScaleBox) {
+        a4ScaleBox.style.width = `${baseWidth}px`;
+        a4ScaleBox.style.height = `${baseHeight}px`;
+      }
       a4ScaleWrapper.style.height = 'auto';
+      a4Document.style.transform = 'none';
       if (previewScaleText) {
         previewScaleText.textContent = '배율: 100%';
       }
@@ -399,7 +422,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateA4Scale();
   }
   window.addEventListener('resize', handleScreenResize);
-  window.addEventListener('orientationchange', () => setTimeout(handleScreenResize, 150));
+  window.addEventListener('orientationchange', () => {
+    setTimeout(handleScreenResize, 100);
+    setTimeout(handleScreenResize, 300);
+  });
   setTimeout(handleScreenResize, 100);
 
   // --- 문서 캡처 공통 함수 (고해상도 Canvas 생성) ---
@@ -421,9 +447,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 캡처 시에는 스케일 해제하여 원본 A4 고해상도(595x842)로 선명하게 캡처
     const prevTransform = a4Document.style.transform;
-    const prevWrapperHeight = a4ScaleWrapper ? a4ScaleWrapper.style.height : '';
+    const prevOrigin = a4Document.style.transformOrigin;
+    const prevBoxW = a4ScaleBox ? a4ScaleBox.style.width : '';
+    const prevBoxH = a4ScaleBox ? a4ScaleBox.style.height : '';
+    const prevWrapperH = a4ScaleWrapper ? a4ScaleWrapper.style.height : '';
+
     a4Document.style.transform = 'none';
-    if (a4ScaleWrapper) a4ScaleWrapper.style.height = 'auto';
+    if (a4ScaleBox) {
+      a4ScaleBox.style.width = '595px';
+      a4ScaleBox.style.height = '842px';
+    }
+    if (a4ScaleWrapper) {
+      a4ScaleWrapper.style.height = 'auto';
+    }
 
     try {
       const canvas = await html2canvas(a4Document, {
@@ -436,7 +472,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return canvas;
     } finally {
       a4Document.style.transform = prevTransform;
-      if (a4ScaleWrapper) a4ScaleWrapper.style.height = prevWrapperHeight;
+      a4Document.style.transformOrigin = prevOrigin;
+      if (a4ScaleBox) {
+        a4ScaleBox.style.width = prevBoxW;
+        a4ScaleBox.style.height = prevBoxH;
+      }
+      if (a4ScaleWrapper) {
+        a4ScaleWrapper.style.height = prevWrapperH;
+      }
       if (wasPreviewHidden) {
         previewSection.classList.add('hidden');
       }
