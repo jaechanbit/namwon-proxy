@@ -10,13 +10,14 @@
   transition: transform 0.2s ease;
 }
 
-/* 모바일 화면에서 A4 미리보기가 삐져나가지 않도록 스케일링 */
-@media (max-width: 640px) {
-  #previewSection .overflow-x-auto {
-    display: flex;
-    justify-content: flex-start;
-    padding-left: 0;
-  }
+/* 모바일 화면에서 A4 미리보기가 삐져나가지 않도록 스케일링 래퍼 */
+#a4ScaleWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
 }
 
 /* 인쇄 스타일 (@media print) */

@@ -266,14 +266,14 @@
             <span class="text-xs font-bold uppercase tracking-wider text-slate-500">실시간 미리보기 (A4 정식 규격)</span>
             <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-semibold animate-pulse">실시간 반영 중</span>
           </div>
-          <span class="text-xs text-slate-400">배율: 100%</span>
+          <span id="previewScaleText" class="text-xs text-slate-400">배율: 100%</span>
         </div>
 
-        <!-- A4 페이퍼 컨테이너 (그림자 및 실물 종이 질감) -->
-        <div class="w-full overflow-x-auto flex justify-center pb-8 pt-2">
+        <!-- A4 페이퍼 컨테이너 (스마트폰 화면에 맞춤 자동 스케일링 래퍼) -->
+        <div id="a4ScaleWrapper" class="w-full flex justify-center items-start overflow-hidden pb-8 pt-2">
           
-          <div id="a4Document" class="bg-white text-slate-900 shadow-2xl rounded-sm border border-slate-300/80 relative flex flex-col justify-between"
-               style="width: 595px; min-width: 595px; height: 842px; min-height: 842px; padding: 60px 52px; box-sizing: border-box; font-family: 'Gowun Batang', 'Batang', serif;">
+          <div id="a4Document" class="bg-white text-slate-900 shadow-2xl rounded-sm border border-slate-300/80 relative flex flex-col justify-between shrink-0"
+               style="width: 595px; min-width: 595px; height: 842px; min-height: 842px; padding: 60px 52px; box-sizing: border-box; font-family: 'Gowun Batang', 'Batang', serif; transform-origin: top center;">
             
             <!-- 상단 영역 -->
             <div>

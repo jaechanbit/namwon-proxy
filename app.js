@@ -340,6 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileViewToggle.querySelector('i').setAttribute('data-lucide', 'edit-3');
         lucide.createIcons();
       }
+      setTimeout(updateA4Scale, 50);
     } else {
       formSection.classList.remove('hidden');
       previewSection.classList.add('hidden');
@@ -350,6 +351,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // --- 모바일 화면 크기에 맞춘 A4 실시간 자동 스케일링 (잘림 방지) ---
+  const a4ScaleWrapper = document.getElementById('a4ScaleWrapper');
+  const previewScaleText = document.getElementById('previewScaleText');
+
+  function updateA4Scale() {
+    if (!a4ScaleWrapper || !a4Document) return;
+
+    // 모바일 탭 등으로 previewSection이 숨겨져 있을 때는 스킵
+    if (previewSection.classList.contains('hidden')) return;
+
+    const containerWidth = a4ScaleWrapper.clientWidth;
+    const padding = 16; // 좌우 안전 여백
+    const availableWidth = Math.max(containerWidth - padding, 240);
+    const baseWidth = 595;
+    const baseHeight = 842;
+
+    if (availableWidth < baseWidth) {
+      const scale = availableWidth / baseWidth;
+      a4Document.style.transform = `scale(${scale})`;
+      a4Document.style.transformOrigin = 'top center';
+      a4ScaleWrapper.style.height = `${Math.ceil(baseHeight * scale) + 16}px`;
+      if (previewScaleText) {
+        previewScaleText.textContent = `배율: ${Math.round(scale * 100)}% (화면맞춤)`;
+      }
+    } else {
+      a4Document.style.transform = 'none';
+      a4ScaleWrapper.style.height = 'auto';
+      if (previewScaleText) {
+        previewScaleText.textContent = '배율: 100%';
+      }
+    }
+  }
 
   // 화면 크기에 따른 초기 클래스 정리
   function handleScreenResize() {
@@ -362,9 +396,11 @@ document.addEventListener('DOMContentLoaded', () => {
         previewSection.classList.add('hidden');
       }
     }
+    updateA4Scale();
   }
   window.addEventListener('resize', handleScreenResize);
-  handleScreenResize();
+  window.addEventListener('orientationchange', () => setTimeout(handleScreenResize, 150));
+  setTimeout(handleScreenResize, 100);
 
   // --- 문서 캡처 공통 함수 (고해상도 Canvas 생성) ---
   async function generateDocumentCanvas() {
@@ -383,6 +419,12 @@ document.addEventListener('DOMContentLoaded', () => {
       previewSection.classList.remove('hidden');
     }
 
+    // 캡처 시에는 스케일 해제하여 원본 A4 고해상도(595x842)로 선명하게 캡처
+    const prevTransform = a4Document.style.transform;
+    const prevWrapperHeight = a4ScaleWrapper ? a4ScaleWrapper.style.height : '';
+    a4Document.style.transform = 'none';
+    if (a4ScaleWrapper) a4ScaleWrapper.style.height = 'auto';
+
     try {
       const canvas = await html2canvas(a4Document, {
         scale: 2.5, // 2.5배 고해상도 (약 1500x2100 px, 인쇄 및 카톡 전송 최적)
@@ -393,6 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       return canvas;
     } finally {
+      a4Document.style.transform = prevTransform;
+      if (a4ScaleWrapper) a4ScaleWrapper.style.height = prevWrapperHeight;
       if (wasPreviewHidden) {
         previewSection.classList.add('hidden');
       }
