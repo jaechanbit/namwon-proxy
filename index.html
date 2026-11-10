@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>임시총회 위임장 온라인 작성 및 서명</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Signature Pad -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+  
+  <!-- html2canvas & jsPDF for high-res export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Google Fonts: Noto Sans KR & Batang for authentic Korean document feel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
+
+  <!-- 상단 네비게이션 헤더 -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-100">
+          <i data-lucide="file-signature" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">임시총회 위임장 간편 작성</h1>
+          <p class="text-xs text-slate-500">남원시학원연합회 온라인 전자서명</p>
+        </div>
+      </div>
+      
+      <!-- 모바일 미리보기 토글 버튼 -->
+      <div class="flex items-center space-x-2 md:hidden">
+        <button id="mobileViewToggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5">
+          <i data-lucide="eye" class="w-4 h-4"></i>
+          <span id="mobileToggleText">미리보기</span>
+        </button>
+      </div>
+
+      <!-- PC 빠른 액션 버튼 -->
+      <div class="hidden md:flex items-center space-x-2">
+        <button id="headerPrintBtn" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5 transition">
+          <i data-lucide="printer" class="w-4 h-4 text-slate-500"></i>
+          인쇄
+        </button>
+        <button id="headerImgBtn" class="px-3.5 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center gap-1.5 transition">
+          <i data-lucide="image" class="w-4 h-4"></i>
+          카톡 전송용 이미지 저장
+        </button>
+        <button id="headerPdfBtn" class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm flex items-center gap-1.5 transition">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          PDF 다운로드
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 레이아웃 컨테이너 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
+    
+    <!-- 안내 배너 -->
+    <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-5 flex items-start gap-3.5 shadow-sm">
+      <div class="p-2 bg-blue-100 text-blue-700 rounded-lg shrink-0 mt-0.5">
+        <i data-lucide="info" class="w-5 h-5"></i>
+      </div>
+      <div class="text-sm text-slate-700 leading-relaxed">
+        <div class="font-bold text-blue-900 text-base mb-1">참석이 어려우신 원장님을 위한 온라인 위임장</div>
+        인적사항을 입력하고 화면에 직접 <strong class="text-blue-800">서명</strong>하거나 <strong class="text-blue-800">도장 자동 생성</strong>을 누른 후,
+        <strong class="text-indigo-700">[카톡 전송용 이미지 저장]</strong> 또는 <strong class="text-indigo-700">[PDF 다운로드]</strong>를 통해 사무국장에게 문자나 카톡으로 간편히 전달하실 수 있습니다.
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- 좌측: 입력 폼 섹션 -->
+      <section id="formSection" class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+        <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">1</span>
+            위임장 내용 입력
+          </h2>
+          <span class="text-xs text-rose-500 font-medium">* 필수 항목</span>
+        </div>
+
+        <!-- 1. 학원명 -->
+        <div>
+          <label for="inputAcademy" class="block text-sm font-semibold text-slate-800 mb-1.5">
+            학원명 <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <input type="text" id="inputAcademy" placeholder="예: 비트컴퓨터학원" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition text-sm text-slate-900 placeholder:text-slate-400">
+          </div>
+        </div>
+
+        <!-- 2. 위임자 (성명) -->
+        <div>
+          <label for="inputName" class="block text-sm font-semibold text-slate-800 mb-1.5">
+            위임자 (원장님 성명) <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <input type="text" id="inputName" placeholder="예: 홍길동" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition text-sm text-slate-900 placeholder:text-slate-400">
+          </div>
+          <p class="text-xs text-slate-500 mt-1">입력하신 성명은 위임자 란 및 서명란에 자동 반영됩니다.</p>
+        </div>
+
+        <!-- 3. 사유 -->
+        <div>
+          <label for="inputReason" class="block text-sm font-semibold text-slate-800 mb-1.5">
+            사유 <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="inputReason" value="학원 수업 일정으로 인한 불참" 
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition text-sm text-slate-900 placeholder:text-slate-400">
+          
+          <!-- 사유 빠른 선택 칩 버튼들 -->
+          <div class="mt-2 flex flex-wrap gap-1.5">
+            <button type="button" class="reason-chip text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 transition">
+              수업 일정
+            </button>
+            <button type="button" class="reason-chip text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 transition">
+              개인 사정
+            </button>
+            <button type="button" class="reason-chip text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 transition">
+              타 일정 참석
+            </button>
+            <button type="button" class="reason-chip text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 transition">
+              건강상의 사유
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. 위임 일자 -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-800 mb-1.5">
+            작성 일자 <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="flex items-center">
+              <input type="number" id="inputYear" value="2026" class="w-full text-center px-2 py-2 rounded-lg border border-slate-300 text-sm focus:border-indigo-500 outline-none">
+              <span class="ml-1 text-xs text-slate-600 font-medium">년</span>
+            </div>
+            <div class="flex items-center">
+              <input type="number" id="inputMonth" min="1" max="12" class="w-full text-center px-2 py-2 rounded-lg border border-slate-300 text-sm focus:border-indigo-500 outline-none">
+              <span class="ml-1 text-xs text-slate-600 font-medium">월</span>
+            </div>
+            <div class="flex items-center">
+              <input type="number" id="inputDay" min="1" max="31" class="w-full text-center px-2 py-2 rounded-lg border border-slate-300 text-sm focus:border-indigo-500 outline-none">
+              <span class="ml-1 text-xs text-slate-600 font-medium">일</span>
+            </div>
+          </div>
+          <div class="mt-1.5 flex gap-2">
+            <button type="button" id="setTodayBtn" class="text-xs text-indigo-600 hover:text-indigo-800 underline">오늘 날짜로 설정</button>
+            <span class="text-xs text-slate-300">|</span>
+            <button type="button" id="setGeneralMeetingBtn" class="text-xs text-indigo-600 hover:text-indigo-800 underline">임시총회일(2026.11.14)로 설정</button>
+          </div>
+        </div>
+
+        <!-- 5. 서명 / 도장 섹션 -->
+        <div class="pt-4 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+              <span>서명 / 날인</span> <span class="text-rose-500">*</span>
+            </label>
+            
+            <!-- 탭: 직접 서명 vs 전자 도장 -->
+            <div class="inline-flex rounded-lg p-0.5 bg-slate-100 border border-slate-200 text-xs font-medium">
+              <button type="button" id="tabDrawSign" class="px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-sm transition">
+                직접 서명
+              </button>
+              <button type="button" id="tabSealSign" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition">
+                도장 생성 (인)
+              </button>
+            </div>
+          </div>
+
+          <!-- 서명 모드 1: 직접 그리기 -->
+          <div id="drawSignContainer" class="space-y-2">
+            <div class="relative bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl overflow-hidden hover:border-indigo-400 transition" style="height: 160px;">
+              <canvas id="signatureCanvas" class="w-full h-full touch-none cursor-crosshair"></canvas>
+              <div id="canvasPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none">
+                <i data-lucide="pen-tool" class="w-6 h-6 mb-1 stroke-1"></i>
+                <span class="text-xs">여기에 마우스나 손가락으로 서명하세요</span>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="text-slate-500">펜 색상:</span>
+                <button type="button" data-color="#1e293b" class="color-pick w-5 h-5 rounded-full bg-slate-800 ring-2 ring-indigo-500 ring-offset-1"></button>
+                <button type="button" data-color="#1d4ed8" class="color-pick w-5 h-5 rounded-full bg-blue-700"></button>
+                <button type="button" data-color="#b91c1c" class="color-pick w-5 h-5 rounded-full bg-red-700"></button>
+              </div>
+              <button type="button" id="clearSignBtn" class="text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                지우기
+              </button>
+            </div>
+          </div>
+
+          <!-- 서명 모드 2: 한글 도장(인) 자동 생성 -->
+          <div id="sealSignContainer" class="hidden space-y-3 bg-red-50/50 p-4 rounded-xl border border-red-200">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs font-semibold text-red-900">도장 자동 생성</p>
+                <p class="text-xs text-red-700/80">원장님 성명으로 깔끔한 전자 직인을 생성합니다.</p>
+              </div>
+              <!-- 도장 미리보기 썸네일 -->
+              <div class="w-14 h-14 bg-white rounded-lg border border-red-200 shadow-inner flex items-center justify-center p-1">
+                <canvas id="sealCanvas" width="100" height="100" class="w-12 h-12"></canvas>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <select id="sealStyleSelect" class="text-xs bg-white border border-red-300 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none">
+                <option value="circle">원형 도장</option>
+                <option value="oval">타원형 도장</option>
+                <option value="square">사각 인장</option>
+              </select>
+              <button type="button" id="applySealBtn" class="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center justify-center gap-1">
+                <i data-lucide="stamp" class="w-3.5 h-3.5"></i>
+                이 도장으로 날인하기
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 하단 액션 버튼 (모바일 및 입력 완료 후) -->
+        <div class="pt-4 border-t border-slate-100 space-y-2.5">
+          <button type="button" id="actionSaveImgBtn" class="w-full py-3 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+            카톡/문자 전송용 이미지 저장 (추천)
+          </button>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="actionSavePdfBtn" class="py-2.5 px-3 rounded-xl font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center gap-1.5 text-sm transition">
+              <i data-lucide="file-text" class="w-4 h-4 text-indigo-600"></i>
+              PDF 저장
+            </button>
+            <button type="button" id="actionPrintBtn" class="py-2.5 px-3 rounded-xl font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center gap-1.5 text-sm transition">
+              <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i>
+              즉시 인쇄
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 우측: 실시간 A4 미리보기 섹션 -->
+      <section id="previewSection" class="lg:col-span-7 flex flex-col items-center">
+        
+        <div class="w-full flex items-center justify-between mb-3 px-1 hidden-print">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">실시간 미리보기 (A4 정식 규격)</span>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-semibold animate-pulse">실시간 반영 중</span>
+          </div>
+          <span class="text-xs text-slate-400">배율: 100%</span>
+        </div>
+
+        <!-- A4 페이퍼 컨테이너 (그림자 및 실물 종이 질감) -->
+        <div class="w-full overflow-x-auto flex justify-center pb-8 pt-2">
+          
+          <div id="a4Document" class="bg-white text-slate-900 shadow-2xl rounded-sm border border-slate-300/80 relative flex flex-col justify-between"
+               style="width: 595px; min-width: 595px; height: 842px; min-height: 842px; padding: 60px 52px; box-sizing: border-box; font-family: 'Gowun Batang', 'Batang', serif;">
+            
+            <!-- 상단 영역 -->
+            <div>
+              <!-- 문서 제목 -->
+              <div class="text-center mt-4 mb-14">
+                <h2 class="text-3xl font-bold tracking-[0.6em] pl-[0.6em] text-black border-b-2 border-transparent">
+                  위 임 장
+                </h2>
+              </div>
+
+              <!-- 인적 사항 및 사유 목록 (원본 PDF와 일치) -->
+              <div class="space-y-4 text-[17px] leading-relaxed text-black font-medium mb-12 pl-2">
+                <div class="flex items-baseline">
+                  <span class="inline-block w-28 text-slate-900 font-bold">◎ 학원명 :</span>
+                  <span id="docAcademy" class="font-bold text-slate-900 border-b border-dotted border-slate-400 flex-1 pb-0.5 ml-1 min-h-[26px]">
+                    <!-- 동적 입력 -->
+                  </span>
+                </div>
+                <div class="flex items-baseline">
+                  <span class="inline-block w-28 text-slate-900 font-bold">◎ 위임자 :</span>
+                  <span id="docName" class="font-bold text-slate-900 border-b border-dotted border-slate-400 flex-1 pb-0.5 ml-1 min-h-[26px]">
+                    <!-- 동적 입력 -->
+                  </span>
+                </div>
+                <div class="flex items-baseline">
+                  <span class="inline-block w-28 text-slate-900 font-bold">◎ 사 &nbsp; 유 :</span>
+                  <span id="docReason" class="text-slate-900 border-b border-dotted border-slate-400 flex-1 pb-0.5 ml-1 min-h-[26px]">
+                    학원 수업 일정으로 인한 불참
+                  </span>
+                </div>
+              </div>
+
+              <!-- 위임 본문 문구 (원본 내용 100% 동일) -->
+              <div class="text-[16.5px] leading-[2.1] text-justify text-slate-900 font-normal px-2 break-keep tracking-normal indent-4 mb-16">
+                상기 본인은 2026년 남원시 학원연합회 회장 선출을 위한 임시총회에 부득이한 사정으로 참석할 수 없으므로, 본 총회에서 의결되는 모든 사항에 대한 의결권을 총회 의장에게 위임하며, 그 결정에 따를 것에 동의합니다. 이에 본 위임장을 제출합니다.
+              </div>
+            </div>
+
+            <!-- 하단 날짜, 서명, 수신인, 안내문구 영역 -->
+            <div>
+              <!-- 일자 -->
+              <div class="text-center text-lg font-bold tracking-widest text-black mb-12">
+                <span id="docYear">2026</span> 년 &nbsp;&nbsp;&nbsp;&nbsp; 
+                <span id="docMonth">&nbsp;&nbsp;</span> 월 &nbsp;&nbsp;&nbsp;&nbsp; 
+                <span id="docDay">&nbsp;&nbsp;</span> 일
+              </div>
+
+              <!-- 성명 및 서명/날인 영역 (오른쪽 정렬) -->
+              <div class="flex justify-end items-center pr-4 mb-14 relative">
+                <div class="text-[17px] font-bold text-black flex items-center relative">
+                  <span>성 명 :</span>
+                  <span id="docSignName" class="inline-block min-w-[120px] text-center border-b border-slate-700 mx-2 font-bold text-slate-900">
+                    &nbsp;
+                  </span>
+                  <span>(인)</span>
+
+                  <!-- 서명 또는 도장 오버레이 이미지 -->
+                  <div id="docSignatureSlot" class="absolute right-0 -top-6 w-24 h-20 flex items-center justify-center pointer-events-none">
+                    <!-- 서명 이미지 들어가는 곳 -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- 수신처 귀하 -->
+              <div class="text-center text-xl font-bold tracking-[0.25em] text-black mb-14">
+                남원시학원연합회장 귀하
+              </div>
+
+              <!-- 하단 안내문구 (원본 PDF 규격 일치: 10.5px, 한 줄, 형광펜 효과) -->
+              <div class="border-t border-slate-300 pt-3 text-center flex justify-center">
+                <span class="inline-block px-1.5 py-0.5 text-[10.5px] leading-snug font-sans font-bold text-black whitespace-nowrap" style="background-color: #ffff00; letter-spacing: -0.4px;">
+                  참석 못하시는 원장님께서는 작성하셔서 사무국장한테 보내주세요. (문자나 카톡으로 보내주셔도 됩니다)
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- 토스트 알림 / 저장 로딩 모달 -->
+  <div id="loadingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl text-center space-y-4">
+      <div class="w-12 h-12 mx-auto rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center animate-spin">
+        <i data-lucide="loader-2" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h3 id="loadingTitle" class="text-base font-bold text-slate-900">문서를 생성하고 있습니다</h3>
+        <p id="loadingDesc" class="text-xs text-slate-500 mt-1">잠시만 기다려주세요...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 결과 다운로드/공유 모달 (모바일 환경 등에서 바로 보기) -->
+  <div id="resultModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+          <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600"></i>
+          위임장 이미지 생성 완료!
+        </div>
+        <button id="closeResultModal" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      
+      <div class="p-4 overflow-y-auto space-y-3 text-center">
+        <p class="text-xs text-slate-600">
+          아래 생성된 이미지를 <strong>길게 꾹 눌러 '이미지 저장'</strong>하거나, <strong>[이미지 다운로드]</strong> 버튼을 눌러 카카오톡이나 문자로 전송하세요.
+        </p>
+        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-inner bg-slate-100 flex justify-center max-h-[50vh]">
+          <img id="resultImagePreview" src="" alt="위임장 결과물" class="object-contain w-full h-auto">
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex gap-2">
+        <a id="modalDownloadLink" download="2026_남원시학원연합회_위임장.png" class="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow text-center flex items-center justify-center gap-1.5">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          이미지 다운로드
+        </a>
+        <button id="modalShareBtn" class="py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1.5">
+          <i data-lucide="share-2" class="w-4 h-4"></i>
+          공유하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+      2026 남원시학원연합회 회장 선출 임시총회 위임장 온라인 시스템
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

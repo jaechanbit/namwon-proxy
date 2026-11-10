@@ -1,0 +1,8 @@
+# Environment & Temporary files
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Scratch scripts
+scratch/
